@@ -5,44 +5,38 @@ import io.anuke.arc.files.*;
 import io.anuke.arc.util.*;
 import io.anuke.mindustry.mod.*;
 import io.anuke.mindustry.mod.Mods.*;
-import org.graalvm.polyglot.*;
+import jdk.nashorn.api.scripting.*;
 
 import javax.script.*;
 import java.io.*;
 
-public class GraalScripts extends Scripts{
+public class NashornScripts extends Scripts{
     private static final Class[] denied = {FileHandle.class, InputStream.class, File.class, Scripts.class, Files.class, ClassAccess.class};
-    //private final Context context;
     private final String wrapper;
+    private final ScriptEngine engine;
+    private final SecurityManager manager;
 
-    public GraalScripts(){
+    public NashornScripts(){
         Time.mark();
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-        engine.eval("print('Hello World!');");
+        System.setProperty("nashorn.args", "--language=es6");
+        engine = new NashornScriptEngineFactory().getScriptEngine(ClassAccess.allowedClassNames::contains);
+        manager = new SecurityManager();
 
-
-
-        Context.Builder builder = Context.newBuilder("js").allowHostClassLookup(ClassAccess.allowedClassNames::contains);
-
-        HostAccess.Builder hb = HostAccess.newBuilder();
-        hb.allowPublicAccess(true);
-        for(Class c : denied){
-            hb.denyAccess(c);
-        }
-        builder.allowHostAccess(hb.build());
-
-        context = builder.build();
         wrapper = Core.files.internal("scripts/wrapper.js").readString();
-
         run(Core.files.internal("scripts/global.js").readString());
         Log.info("Time to load script engine: {0}", Time.elapsed());
     }
 
+    @Override
     public void run(LoadedMod mod, FileHandle file){
         run(wrapper.replace("$SCRIPT_NAME$", mod.name + "_" +file.nameWithoutExtension().replace("-", "_").replace(" ", "_")).replace("$CODE$", file.readString()));
     }
 
     private void run(String script){
-       // context.eval("js", script);
+        try{
+            engine.eval(script);
+        }catch(Throwable e){
+            e.printStackTrace();
+        }
     }
 }

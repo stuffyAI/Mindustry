@@ -267,7 +267,7 @@ public class DesktopLauncher extends ClientLauncher{
 
     @Override
     public Scripts createScripts(){
-        return new GraalScripts();
+        return new NashornScripts();
     }
 
     @Override
