@@ -7,15 +7,21 @@ import io.anuke.mindustry.mod.*;
 import io.anuke.mindustry.mod.Mods.*;
 import org.graalvm.polyglot.*;
 
+import javax.script.*;
 import java.io.*;
 
 public class GraalScripts extends Scripts{
     private static final Class[] denied = {FileHandle.class, InputStream.class, File.class, Scripts.class, Files.class, ClassAccess.class};
-    private final Context context;
+    //private final Context context;
     private final String wrapper;
 
     public GraalScripts(){
         Time.mark();
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+        engine.eval("print('Hello World!');");
+
+
+
         Context.Builder builder = Context.newBuilder("js").allowHostClassLookup(ClassAccess.allowedClassNames::contains);
 
         HostAccess.Builder hb = HostAccess.newBuilder();
@@ -37,6 +43,6 @@ public class GraalScripts extends Scripts{
     }
 
     private void run(String script){
-        context.eval("js", script);
+       // context.eval("js", script);
     }
 }
